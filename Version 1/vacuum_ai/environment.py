@@ -40,11 +40,23 @@ class Environment:
                     world_map[i][j] = Wall((j, i))
         return world_map
     
+    def get_cells(self, positions:list) -> dict[tuple[int,int],...]:
+        cells = {}
+        for pos in positions:
+            cells[pos] = self.world[pos[1]][pos[0]]
+        return cells
+    
     def get_robot_location(self):
         for i in range(len(self.world)):
             for j in range(len(self.world[i])):
-                if self.world[i][j] in ["^", "v", "<", ">"]:
-                    return i, j
+                if isinstance(self.world[i][j], Robot):
+                    return self.world[i][j]
+                
+    def move_robot(self, robot, move_to):
+        current_location = robot.position
+        self.world[current_location[1]][current_location[0]] = " "
+        self.world[move_to[1]][move_to[0]] = robot
+        robot.position = move_to
 
     def __str__(self):
         out = ""

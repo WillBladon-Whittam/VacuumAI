@@ -11,26 +11,55 @@ class Robot(Agent):
 
         self.battery_life = 5
 
+    def decide(self, percept):
+        valid_cells = [location for location, item in percept.items() if item == " "]
 
-    def decide(self, percept: dict[tuple[int, int], ...]):
-        ...
+        selected_option = random.choice(["rotate", "move"])
 
+        if selected_option == "move":
+            direction_map = {
+                "^": (self.position[0], self.position[1] - 1),
+                "v": (self.position[0], self.position[1] + 1),
+                "<": (self.position[0] - 1, self.position[1]),
+                ">": (self.position[0] + 1, self.position[1])
+            }
+
+            target_move = direction_map[self.direction]
+
+            if target_move in valid_cells:
+                return "move", target_move
+
+        direction_map = {
+            (0, -1): "^", 
+            (0, 1): "v",
+            (-1, 0): "<",
+            (1, 0): ">"
+        }
+        
+        valid_cells = [
+            move for move in valid_cells 
+            if direction_map.get((move[0] - self.position[0], move[1] - self.position[1])) != self.direction
+        ]
+        
+        selected_move = random.choice(valid_cells)
+
+        move_direction = (selected_move[0] - self.position[0], selected_move[1] - self.position[1])
+        return "rotate", direction_map[move_direction]
+    
     def act(self, environment):
         cell = self.sense(environment)
         action, location = self.decide(cell)
 
         if action == "move":
             self.move(environment, location)
-        elif action == "random_move":
-            self.move(environment, random.choice(location))
-        elif action == "put_out_flame":
-            self.flames.remove(location)
-            self.world[location[1]][location[0]] = " "
-            environment.put_out_flame(location)
-            self.water_level -= 5
+        elif action == "rotate":
+            self.rotate(location)
 
-    def move(self, environment, to):
-        environment.move_robot(self, to)
+    def move(self, environment, move_to):
+        environment.move_robot(self, move_to)
+        
+    def rotate(self, direction):
+        self.direction = direction
 
     def __str__(self):
         if self.direction == "^":
